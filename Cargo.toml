@@ -26,3 +26,11 @@ path = "src/tools/generate_empty_synapse.rs"
 [[bin]]
 name = "generate_literal_add"
 path = "src/tools/generate_literal_add.rs"
+
+[[bin]]
+name = "generate_add_print"
+path = "src/tools/generate_add_print.rs"
+
+[[bin]]
+name = "generate_conditional"
+path = "src/tools/generate_conditional.rs"
