@@ -1,3 +1,3 @@
-/// Placeholder for the type system (Spec VII)
-/// Will implement type definitions, constraints, linearity etc.
+// Заглушка для системы типов Synapse
+
 pub struct TypeSystem;

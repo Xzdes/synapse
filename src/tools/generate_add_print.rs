@@ -1,5 +1,5 @@
-use synapse_project::asg::{ASG, Node};
-use synapse_project::syn1_writer::save_synapse_file;
+use synapse::asg::{ASG, Node};
+use synapse::syn1_writer::save_synapse_file;
 use anyhow::Result;
 
 fn main() -> Result<()> {

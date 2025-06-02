@@ -1,9 +1,9 @@
-use synapse_project::asg::{ASG, Node};
-use synapse_project::syn1_writer::save_synapse_file;
+use synapse::asg::{ASG, Node};
+use synapse::syn1_writer::save_synapse_file;
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    // Граф: x = 1 + 2
+    // x = 1 + 2
     let n1 = Node::literal_int(1, 1);
     let n2 = Node::literal_int(2, 2);
     let n3 = Node::binary_add(3, 1, 2);
