@@ -1,0 +1,27 @@
+# Бинарные файлы и временные каталоги Rust
+/target/
+**/*.rs.bk
+
+# Логи и дампы
+*.log
+*.tmp
+*.swp
+
+# Служебные файлы редакторов
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+*.sublime-project
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Файлы сборки cargo
+Cargo.lock
+
+# Сгенерированные .synapse-файлы
+*.synapse
+
+# Файлы тестовых и вспомогательных утилит (если есть)
+/tools/*.synapse
