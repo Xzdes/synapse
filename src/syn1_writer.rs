@@ -5,7 +5,7 @@
 
 use std::fs::File;
 use std::io::{self, Write, BufWriter};
-use crate::asg::{ASG, Node, Edge};
+use crate::asg::{ASG};
 use crate::types::SynType;
 
 /// Запись VarInt (compact format).

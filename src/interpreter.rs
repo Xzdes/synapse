@@ -2,7 +2,7 @@
 
 use crate::asg::Node;
 use crate::nodecodes::NodeType;
-use crate::types::{SynType, SynError};
+use crate::types::{SynError};
 
 /// Интерпретирует отдельный узел ASG-графа.
 /// Возвращает Result<(), SynError> — можно обрабатывать ошибки.
