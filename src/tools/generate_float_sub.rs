@@ -1,20 +1,33 @@
-use synapse::asg::{ASG, Node};
-use synapse::syn1_writer::save_synapse_file;
-use anyhow::Result;
+// src/tools/generate_float_sub.rs
 
-fn main() -> Result<()> {
-    // Пример: x = 5.5 - 2.25; print(x)
-    let n1 = Node::literal_float(1, 5.5);
-    let n2 = Node::literal_float(2, 2.25);
-    let n3 = Node::binary_sub(3, 1, 2);
-    let n4 = Node::perform_io_write_line(4, 3);
+//! Генератор: вычитает два литеральных float и сохраняет результат в графе.
 
-    let asg = ASG {
-        nodes: vec![n1, n2, n3, n4],
-        entry: 4,
-    };
+use synapse::asg::{ASG, Edge};
+use synapse::node_factories;
+use synapse::syn1_writer::save_syn1;
 
-    save_synapse_file("float_sub.synapse", &asg)?;
-    println!("Файл float_sub.synapse успешно создан!");
-    Ok(())
+fn main() {
+    // 1. Литералы 5.5 и 2.25
+    let n1 = node_factories::literal_float(1, 5.5);
+    let n2 = node_factories::literal_float(2, 2.25);
+
+    // 2. Вычитание: n3 = n1 - n2
+    let n3 = node_factories::binary_sub(3, 1, 2);
+
+    // 3. Print: вывести n3
+    let n4 = node_factories::print(4, 3);
+
+    // 4. Граф и связи
+    let nodes = vec![n1, n2, n3, n4];
+    let edges = vec![
+        Edge { from: 1, to: 3, code: 0 },
+        Edge { from: 2, to: 3, code: 0 },
+        Edge { from: 3, to: 4, code: 0 },
+    ];
+
+    let asg = ASG { nodes, edges };
+
+    // 5. Сохраняем
+    save_syn1(&asg, "float_sub.synapse").expect("Failed to save SYN1 file");
+    println!("Граф успешно сгенерирован: float_sub.synapse");
 }

@@ -20,8 +20,11 @@ Thumbs.db
 # Файлы сборки cargo
 Cargo.lock
 
-# Сгенерированные .synapse-файлы
+# Сгенерированные .synapse-файлы .json
 *.synapse
+*.json
 
 # Файлы тестовых и вспомогательных утилит (если есть)
 /tools/*.synapse
+
+

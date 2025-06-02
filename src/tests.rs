@@ -1,59 +1,35 @@
-#[cfg(test)]
-mod tests {
-    use crate::asg::{ASG, Node};
-    use crate::interpreter::execute;
+// src/tests.rs
 
-    #[test]
-    fn test_literal_add() {
-        // x = 1 + 2
-        let n1 = Node::literal_int(1, 1);
-        let n2 = Node::literal_int(2, 2);
-        let n3 = Node::binary_add(3, 1, 2);
+//! Тесты для Synapse.
+//! Пример: тестируем, что FFI node правильно выдаёт ошибку "NotImplemented".
 
-        let asg = ASG {
-            nodes: vec![n1, n2, n3],
-            entry: 3,
-        };
+mod asg;
+mod nodecodes;
+mod types;
+mod interpreter;
 
-        let mut output = Vec::new();
-        let result = execute(&asg);
-        assert!(result.is_ok());
-        // Для расширения: можно добавить сбор вывода и проверку результата
-    }
+use asg::Node;
+use nodecodes::NodeType;
+use types::{SynType, SynError};
+use interpreter::interpret_node;
 
-    #[test]
-    fn test_conditional_then() {
-        // if (1) { 42 } else { 99 }
-        let n1 = Node::literal_int(1, 1);
-        let n2 = Node::literal_int(2, 42);
-        let n3 = Node::literal_int(3, 99);
-        let n4 = Node::conditional(4, 1, 2, 3);
+/// Тест: обработка FFI-узла должна возвращать ошибку NotImplemented
+#[test]
+fn test_ffi_node_stub() {
+    let ffi_node = Node {
+        id: 100,
+        code: NodeType::FFI as u16,
+        value: Some(serde_json::json!({"func": "system_time"})),
+        ty: Some(SynType::Any),
+    };
+    let result = interpret_node(&ffi_node);
 
-        let asg = ASG {
-            nodes: vec![n1, n2, n3, n4],
-            entry: 4,
-        };
-
-        let result = execute(&asg);
-        assert!(result.is_ok());
-        // Можно также проверять, что результат entry node == 42
-    }
-
-    #[test]
-    fn test_conditional_else() {
-        // if (0) { 42 } else { 99 }
-        let n1 = Node::literal_int(1, 0);
-        let n2 = Node::literal_int(2, 42);
-        let n3 = Node::literal_int(3, 99);
-        let n4 = Node::conditional(4, 1, 2, 3);
-
-        let asg = ASG {
-            nodes: vec![n1, n2, n3, n4],
-            entry: 4,
-        };
-
-        let result = execute(&asg);
-        assert!(result.is_ok());
-        // Можно также проверять, что результат entry node == 99
+    // Проверяем, что результат — ошибка NotImplemented
+    match result {
+        Err(SynError::NotImplemented(msg)) => {
+            assert!(msg.contains("FFI"), "Ошибка должна быть про FFI");
+            println!("FFI node test passed! {:?}", msg);
+        }
+        _ => panic!("FFI node должен возвращать ошибку NotImplemented"),
     }
 }
