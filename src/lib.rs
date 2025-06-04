@@ -1,23 +1,11 @@
-//! Crate root for Synapse.
-//!
-//! This library defines:
-//! - The ASG (Abstract Syntax Graph).
-//! - Node and edge types.
-//! - Serialization (SYN1 format).
-//! - Interpreter.
-//! - Proof system.
-//! - Modules and effects.
-//! - FFI.
-//! - Compiler backends (LLVM, Wasm, C, JS).
-//! - Type system and checker.
-//! - Async concurrency.
-//! - Graphviz exporter.
-
 #![warn(missing_docs)]
 
-pub mod ai_api;
+//! # Synapse
+//!
+//! Synapse — AI-friendly programming language with ASG representation.
+//! This is the main library crate for Synapse.
+
 pub mod asg;
-pub mod compiler;
 pub mod concurrency;
 pub mod concurrency_async;
 pub mod effects;
@@ -27,59 +15,41 @@ pub mod macros;
 pub mod modules;
 pub mod node_factories;
 pub mod nodecodes;
+
+/// Proof module: Provides SMT-based proof system.
 pub mod proof;
-pub mod proof_smt;
+
+/// Proof DSL module: High-level interface for SMT interactions.
+pub mod proof_dsl;
+
 pub mod syn1;
 pub mod syn1_writer;
 pub mod testing;
 pub mod types;
 
-// Backends
-pub mod llvm_backend;
-pub mod wasm_backend;
-pub mod c_backend;
-pub mod js_backend;
+/// Result type for all Synapse operations.
+pub type SynapseResult<T> = Result<T, SynapseError>;
 
-// Tools
-pub mod tools;
-
-// Type Checker
-pub mod type_checker;
-
-use thiserror::Error;
-
-/// Synapse error type.
-#[derive(Debug, Error)]
+/// Synapse's core error type.
+#[derive(Debug, thiserror::Error)]
 pub enum SynapseError {
-    /// Serialization error.
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-
-    /// Type error.
-    #[error("Type error: {0}")]
-    Type(String),
-
-    /// Proof error.
-    #[error("Proof error: {0}")]
-    Proof(String),
-
-    /// Effect error.
-    #[error("Effect error: {0}")]
-    Effect(String),
-
-    /// Concurrency error.
+    /// Generic error type for concurrency operations.
     #[error("Concurrency error: {0}")]
     Concurrency(String),
 
-    /// General error.
-    #[error("General error: {0}")]
-    General(String),
-}
+    /// Generic error type for file effects (IO).
+    #[error("Effect error: {0}")]
+    Effect(String),
 
-/// Synapse result type.
-pub type SynapseResult<T> = Result<T, SynapseError>;
+    /// Serialization/deserialization errors.
+    #[error("Serialization error: {0}")]
+    Serialization(String),
 
-/// Initialize the logger.
-pub fn init_logger() {
-    let _ = env_logger::builder().is_test(true).try_init();
+    /// Generic error type for proof or SMT interactions.
+    #[error("Proof error: {0}")]
+    Proof(String),
+
+    /// Unknown or unhandled error.
+    #[error("Unknown error: {0}")]
+    Other(String),
 }

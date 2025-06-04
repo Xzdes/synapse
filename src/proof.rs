@@ -1,16 +1,22 @@
-//! Модуль `proof`
-//!
-//! Заглушка для системы доказательств (Proof DSL).
-//!
-//! TODO:
-//! - Реализовать полную поддержку Specification/Proof.
+use crate::{asg::ASG, proof_dsl::ProofDSL, SynapseResult};
+use z3::Context;
 
-use crate::asg::ASG;
-
-/// Проверить доказательства для ASG.
+/// Проверяет доказательства на основе ASG.
 ///
-/// На данный момент реализовано как заглушка.
-pub fn check_proofs(asg: &ASG) {
-    println!("Proof: checking proofs for ASG with {} nodes.", asg.nodes.len());
-    // TODO: Реализовать проверку доказательств.
+/// # Аргументы
+///
+/// * `_asg` — Абстрактный синтаксический граф (пока не используется).
+///
+/// # Возвращает
+///
+/// `SynapseResult<bool>`
+pub fn check_proofs(_asg: &ASG) -> SynapseResult<bool> {
+    let config = z3::Config::new();
+    let context = Context::new(&config);
+    let mut proof_dsl = ProofDSL::new(&context);
+
+    proof_dsl.assert("(declare-const x Int)")?;
+    proof_dsl.assert("(assert (> x 0))")?;
+
+    proof_dsl.check()
 }

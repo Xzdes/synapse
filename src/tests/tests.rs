@@ -2,7 +2,7 @@
 //!
 //! Тестируем:
 //! - TypeChecker (check_types, infer_types).
-//! - ProofSMT (solve_proof).
+//! - Proof SMT (ProofDSL).
 //! - Бэкенды (LLVM, C, JS, WASM).
 
 use synapse::asg::{ASG, NodeID};
@@ -10,7 +10,8 @@ use synapse::node_factories::literal_int;
 use synapse::interpreter::InterpreterContext;
 use synapse::{
     type_checker,
-    proof_smt,
+    proof,
+    proof_dsl::ProofDSL,
     llvm_backend::LLVMBackend,
     c_backend::CBackend,
     js_backend::JsBackend,
@@ -27,7 +28,18 @@ fn test_type_checker() {
 
 #[test]
 fn test_proof_smt() {
-    let result = proof_smt::solve_proof("x > 0").unwrap();
+    let mut proof_dsl = ProofDSL::new();
+    assert!(proof_dsl.assert("(declare-const x Int)").is_ok());
+    assert!(proof_dsl.assert("(assert (> x 0))").is_ok());
+    let result = proof_dsl.check().unwrap();
+    assert!(result);
+}
+
+#[test]
+fn test_check_proofs() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let result = proof::check_proofs(&asg).unwrap();
     assert!(result);
 }
 
