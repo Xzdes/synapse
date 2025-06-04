@@ -19,7 +19,6 @@ pub fn load_syn1(path: &str) -> SynapseResult<ASG> {
     let mut file = File::open(path)
         .map_err(|e| SynapseError::Serialization(format!("Failed to open file: {}", e)))?;
 
-    // Проверяем заголовок
     let mut header = [0u8; 4];
     file.read_exact(&mut header)
         .map_err(|e| SynapseError::Serialization(format!("Failed to read header: {}", e)))?;
@@ -27,12 +26,10 @@ pub fn load_syn1(path: &str) -> SynapseResult<ASG> {
         return Err(SynapseError::Serialization("Invalid SYN1 header".into()));
     }
 
-    // Читаем версию (u8)
     let _version = file
         .read_u8()
         .map_err(|e| SynapseError::Serialization(format!("Failed to read version: {}", e)))?;
 
-    // Читаем количество узлов (VarInt)
     let node_count = read_varint(&mut file)?;
 
     let mut nodes = Vec::new();
@@ -81,7 +78,6 @@ pub fn load_syn1(path: &str) -> SynapseResult<ASG> {
     Ok(ASG { nodes })
 }
 
-/// Чтение VarInt из потока.
 fn read_varint<R: Read>(reader: &mut R) -> SynapseResult<u64> {
     let mut result = 0u64;
     let mut shift = 0u8;
@@ -104,174 +100,59 @@ fn read_varint<R: Read>(reader: &mut R) -> SynapseResult<u64> {
     Ok(result)
 }
 
-/// Преобразование числового кода в NodeType.
 impl TryFrom<u32> for NodeType {
     type Error = ();
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         use NodeType::*;
         let node_types = [
-            LiteralInt,
-            LiteralFloat,
-            LiteralBool,
-            LiteralString,
-            LiteralUnit,
-            BinaryOperation,
-            UnaryOperation,
-            Conditional,
-            RecordFieldAccess,
-            Dereference,
-            VariableDefinition,
-            VariableReference,
-            Lambda,
-            Application,
-            TypeInt,
-            TypeFloat,
-            TypeBool,
-            TypeString,
-            TypeUnit,
-            TypeFunction,
-            TypeVariable,
-            ForAll,
-            TypeRecord,
-            FieldDefinition,
-            TypeADT,
-            ADTVariant,
-            TypeLinear,
-            TypeSharedRef,
-            TypeMutableRef,
-            TypeLifetime,
-            TypeResult,
-            TypeErrorUnion,
-            TypeTrait,
-            TraitMethodDecl,
-            ForeignTypeDecl,
-            EffectIO,
-            EffectConsole,
-            EffectFSRead,
-            EffectFSWrite,
-            EffectNetwork,
-            EffectState,
-            EffectRandom,
-            EffectExcep,
-            EffectNonTerm,
-            EffectPure,
-            DataRecordInit,
-            DataADTInit,
-            DataOk,
-            DataErr,
-            PerformEffect,
-            MatchResult,
-            MatchADT,
-            MacroDefinition,
-            MacroInvocation,
-            ModuleRoot,
-            ImportDeclaration,
-            ExportDeclaration,
-            ImportAlias,
-            ForeignFunctionDecl,
-            ForeignBlock,
-            Proof,
-            Specification,
-            Assume,
-            Assert,
-            TestCase,
-            TestSuite,
-            Assertion,
-            PropertyDefinition,
-            InputGenerator,
-            MatchCase,
-            ImplMethodDef,
-            TraitImpl,
-            Concurrency,
+            LiteralInt, LiteralFloat, LiteralBool, LiteralString, LiteralUnit,
+            BinaryOperation, UnaryOperation, Conditional, RecordFieldAccess, Dereference,
+            VariableDefinition, VariableReference, Lambda, Application,
+            TypeInt, TypeFloat, TypeBool, TypeString, TypeUnit, TypeFunction,
+            TypeVariable, ForAll, TypeRecord, FieldDefinition, TypeADT, ADTVariant,
+            TypeLinear, TypeSharedRef, TypeMutableRef, TypeLifetime, TypeResult,
+            TypeErrorUnion, TypeTrait, TraitMethodDecl, ForeignTypeDecl,
+            EffectIO, EffectConsole, EffectFSRead, EffectFSWrite, EffectNetwork,
+            EffectState, EffectRandom, EffectExcep, EffectNonTerm, EffectPure,
+            DataRecordInit, DataADTInit, DataOk, DataErr,
+            PerformEffect, MatchResult, MatchADT, MacroDefinition, MacroInvocation,
+            ModuleRoot, ImportDeclaration, ExportDeclaration, ImportAlias,
+            ForeignFunctionDecl, ForeignBlock,
+            Proof, Specification, Assume, Assert,
+            TestCase, TestSuite, Assertion, PropertyDefinition, InputGenerator,
+            MatchCase, ImplMethodDef, TraitImpl, Concurrency
         ];
 
-        node_types
-            .get(value as usize)
-            .cloned()
-            .ok_or(())
+        node_types.get(value as usize).cloned().ok_or(())
     }
 }
 
-/// Преобразование числового кода в EdgeType.
 impl TryFrom<u32> for EdgeType {
     type Error = ();
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         use EdgeType::*;
         let edge_types = [
-            DataInput,
-            ControlFlowNext,
-            Condition,
-            ThenBranch,
-            ElseBranch,
-            ScopeLink,
-            LambdaParameter,
-            LambdaBody,
-            DefinitionLink,
-            BindsVariable,
-            ApplicationFunction,
-            ApplicationArgument,
-            TypeAnnotation,
-            FunctionParamType,
-            FunctionReturnType,
-            TypeVarBinding,
-            TypeBody,
-            Constraint,
-            LinearInnerType,
-            RefInnerType,
-            RefLifetime,
-            LifetimeBound,
-            ResultOkType,
-            ResultErrType,
-            RecordField,
-            FieldName,
-            FieldType,
-            FieldValue,
-            FieldTarget,
-            HasVariant,
-            VariantName,
-            VariantParam,
-            VariantArgValue,
-            VariantTarget,
-            ProducesEffect,
-            MatchInput,
-            MatchOkBranch,
-            MatchErrBranch,
-            MatchBranch,
-            MatchesVariant,
-            CaseBody,
-            ImportsFromModule,
-            ImportsSymbol,
-            ImportsAll,
-            ExportsSymbol,
-            ModuleContains,
-            HasFFISignature,
-            UsesABI,
-            LinksToLibrary,
-            ProvesSpec,
-            SpecifiesCode,
-            ProofStepDependsOn,
-            ReliesOnAssumption,
-            TestsFunction,
-            ProvidesInput,
-            MakesAssertion,
-            ChecksProperty,
-            InputForProperty,
-            MacroBody,
-            MacroInputAST,
-            InvokesMacro,
-            HasMethod,
-            ImplementsTrait,
-            ForType,
-            ProvidesImpl,
-            ImplementsMethod,
-            RootExpression,
+            DataInput, ControlFlowNext, Condition, ThenBranch, ElseBranch,
+            ScopeLink, LambdaParameter, LambdaBody, DefinitionLink, BindsVariable,
+            ApplicationFunction, ApplicationArgument,
+            TypeAnnotation, FunctionParamType, FunctionReturnType,
+            TypeVarBinding, TypeBody, Constraint, LinearInnerType,
+            RefInnerType, RefLifetime, LifetimeBound, ResultOkType, ResultErrType,
+            RecordField, FieldName, FieldType, FieldValue, FieldTarget,
+            HasVariant, VariantName, VariantParam, VariantArgValue, VariantTarget,
+            ProducesEffect, MatchInput, MatchOkBranch, MatchErrBranch,
+            MatchBranch, MatchesVariant, CaseBody,
+            ImportsFromModule, ImportsSymbol, ImportsAll, ExportsSymbol, ModuleContains,
+            HasFFISignature, UsesABI, LinksToLibrary,
+            SpecifiesCode, ProofStepDependsOn, ReliesOnAssumption,
+            TestsFunction, ProvidesInput, MakesAssertion, ChecksProperty, InputForProperty,
+            MacroBody, MacroInputAST, InvokesMacro,
+            ImplementsTrait, ForType, ProvidesImpl, ImplementsMethod,
+            RootExpression
         ];
 
-        edge_types
-            .get(value as usize)
-            .cloned()
-            .ok_or(())
+        edge_types.get(value as usize).cloned().ok_or(())
     }
 }

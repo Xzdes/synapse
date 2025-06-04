@@ -34,8 +34,10 @@ pub mod testing;
 pub mod compiler;
 pub mod ai_api;
 
+use thiserror::Error;
+
 /// Тип ошибки верхнего уровня для всей библиотеки.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 pub enum SynapseError {
     /// Ошибка сериализации/десериализации.
     #[error("Serialization error: {0}")]
@@ -75,4 +77,17 @@ pub enum SynapseError {
     General(String),
 }
 
+/// Результат Synapse.
+///
+/// Используется для возвращения ошибок и значений в формате Result<T, SynapseError>.
+///
+/// # Пример
+///
+/// ```
+/// use synapse::{SynapseResult, SynapseError};
+///
+/// fn my_function() -> SynapseResult<()> {
+///     Ok(())
+/// }
+/// ```
 pub type SynapseResult<T> = Result<T, SynapseError>;

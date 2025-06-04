@@ -1,182 +1,108 @@
 # Synapse
 
-![Rust](https://img.shields.io/badge/Rust-2021-blue)
-![Experimental](https://img.shields.io/badge/status-experimental-orange)
+**Synapse** is an experimental AI-focused programming language that uses an **Abstract Syntax Graph (ASG)** as its primary representation.  
+This repository contains the core library that defines the ASG, node/edge types, serialization (SYN1 format), interpreter, proof system, modules, FFI, effects, and more.
 
-**Synapse** is an experimental, formal programming language and platform for AI and code analysis, built around *Abstract Syntax Graphs* (ASG).
-In Synapse, your programs *are* graphs — you build, transform, and run them directly!
+---
+
+## 🧩 What is Synapse?
+
+Synapse is a formal programming language designed with the following goals:
+- **Formal rigor and verifiability** — ensures AI-generated code is analyzable and verifiable.
+- **ASG as the canonical representation** — unlike traditional text-based languages, Synapse treats programs as graphs of nodes and edges.
+- **Static analyzability** — every node and edge is fully typed and documented.
+- **Cross-platform execution** — runs on Windows, Linux, macOS, Android, iOS, and WebAssembly (where possible).
 
 ---
 
 ## ✨ Features
 
-* **ASG-first:** Every program is a graph (nodes and edges), not a syntax tree. This enables new code analysis and generation techniques.
-* **SYN1 binary format:** Cross-platform, compact serialization for graphs.
-* **Rust-based interpreter:** CLI interpreter and code generators, written in Rust.
-* **Generators:** Ready-made scripts for arithmetic, conditions, print, and more.
-* **Node factory:** Type-safe, easy-to-use functions for building graphs.
-* **JSON ⇄ SYN1:** Converters for integration with AI/ML or visualization tools (e.g., Python, Jupyter).
-* **Easily extensible:** Add new node/edge types with one line.
-* **Readable, documented code:** Clean structure for easy onboarding and hacking.
+✅ Abstract Syntax Graph (ASG)  
+✅ Binary serialization format (SYN1)  
+✅ Interpreter (runs ASG programs)  
+✅ Proof and specification support (assertions, assumes)  
+✅ Effects system (IO, File, Console, etc.)  
+✅ Macro system  
+✅ Multithreading support  
+✅ Modular architecture  
+✅ JSON import/export  
+✅ Unit tests included
 
 ---
 
-## 📚 Project Structure
+## 🛠️ How to build
 
-```
-synapse/
-│
-├── src/
-│   ├── asg.rs             # Core ASG structures (Node, Edge, ASG)
-│   ├── nodecodes.rs       # NodeType and EdgeType enums (graph vocabulary)
-│   ├── types.rs           # Type system and errors (SynType, SynError)
-│   ├── node_factories.rs  # Utility functions for node construction
-│   ├── syn1.rs            # Binary .synapse (SYN1) loader
-│   ├── syn1_writer.rs     # Binary .synapse (SYN1) writer
-│   ├── interpreter.rs     # ASG execution engine
-│   ├── lib.rs             # Library entry point
-│   ├── main.rs            # Example CLI interpreter
-│   └── tools/             # CLI generators and converters:
-│       ├── generate_add_print.rs
-│       ├── generate_literal_add.rs
-│       ├── generate_float_sub.rs
-│       ├── generate_conditional.rs
-│       ├── generate_gt_if.rs
-│       ├── generate_empty_synapse.rs
-│       └── convert_synapse_json.rs   # JSON <-> SYN1 converter
-│
-├── Cargo.toml
-├── LICENSE
-├── README.md
-└── *.synapse / *.json         # Generated graph files and JSON dumps
+You'll need [Rust](https://www.rust-lang.org/) installed.
 
-```
-
----
-
-## 🚀 Quick Start
-
-### 1. **Install Rust**
-
-Follow the [official guide](https://www.rust-lang.org/tools/install).
-Recommended: Rust 1.70+
-
-```sh
-rustup toolchain install stable
-```
-
----
-
-### 2. **Build the project**
-
-```sh
-git clone https://github.com/Xzdes/synapse.git
+```bash
+git clone https://github.com/yourusername/synapse.git
 cd synapse
-cargo build --release
+cargo build
+````
+
+---
+
+## 🚀 How to run
+
+You can run tests with:
+
+```bash
+cargo test
+```
+
+If you want to explore how to use Synapse in your own Rust project, you can include it as a dependency in your `Cargo.toml`:
+
+```toml
+[dependencies]
+synapse = { path = "../synapse" }
+```
+
+Then you can use it like this:
+
+```rust
+use synapse::asg::ASG;
+use synapse::interpreter::InterpreterContext;
+use synapse::node_factories::literal_int;
+
+fn main() {
+    let mut asg = ASG::new();
+    let node = literal_int(1, 42);
+    asg.add_node(node);
+
+    let interpreter = InterpreterContext;
+    interpreter.execute(&asg).unwrap();
+}
 ```
 
 ---
 
-### 3. **Generate and run an example graph**
+## 📦 What's inside?
 
-```sh
-cargo run --bin generate_add_print
-cargo run --bin synapse add_print.synapse
-```
-
-You’ll see step-by-step node execution in your terminal!
-
----
-
-### 4. **Convert between SYN1 and JSON**
-
-Export to JSON:
-
-```sh
-cargo run --bin convert_synapse_json -- --to-json add_print.synapse add_print.json
-```
-
-Import from JSON back to binary:
-
-```sh
-cargo run --bin convert_synapse_json -- --from-json add_print.json add_print_copy.synapse
-```
-
----
-
-## 🏗 How to write your own generators?
-
-* **Import the node factory:**
-
-  ```rust
-  use synapse::node_factories;
-  ```
-* **Create nodes like this:**
-
-  ```rust
-  let n1 = node_factories::literal_int(1, 42);
-  let n2 = node_factories::literal_int(2, 100);
-  let n3 = node_factories::binary_add(3, 1, 2);
-  ```
-* **Assemble into a graph and save:**
-
-  ```rust
-  use synapse::asg::{ASG, Edge};
-  use synapse::syn1_writer::save_syn1;
-  let asg = ASG { nodes: vec![n1, n2, n3], edges: vec![] };
-  save_syn1(&asg, "example.synapse").unwrap();
-  ```
-
----
-
-## 🛠️ Roadmap & Plans
-
-**Already done:**
-
-* Core ASG structures and enums
-* Binary SYN1 format (compact and cross-platform)
-* Interpreter for arithmetic, conditions, and print
-* All generators rewritten using the new node factory
-* JSON <-> SYN1 converter
-
-**Up next:**
-
-* Advanced type system (static/dynamic typing)
-* More node/edge types (functions, variables, effect nodes)
-* Error handling and pattern matching
-* FFI (call external code)
-* Experimental AI integrations
-
----
-
-## 🤔 Who is Synapse for?
-
-* **Researchers:** Experiment with graph-based program analysis, formal methods, or AI-driven compilation.
-* **Language designers:** Prototype new node types and see them executed immediately.
-* **ML/AI enthusiasts:** Directly generate, mutate, and execute program graphs.
-* **Students:** Learn about compilers, graph algorithms, and Rust by example.
+* `asg.rs` — defines ASG, nodes, and edges
+* `nodecodes.rs` — enums for NodeType and EdgeType
+* `syn1.rs` — loader for binary SYN1 format
+* `syn1_writer.rs` — writer for binary SYN1 format
+* `interpreter.rs` — ASG interpreter
+* `node_factories.rs` — helper functions for building nodes
+* `effects.rs` — effect system (IO, console, file, etc.)
+* `proof.rs` — proof and specification support
+* `ffi.rs` — foreign function interface
+* `macros.rs` — macro system
+* `concurrency.rs` — thread support
+* `testing.rs` — unit test integration
+* `compiler.rs` — frontend/backend architecture
+* `ai_api.rs` — AI interface (JSON serialization)
+* `types.rs` — Synapse type system
 
 ---
 
 ## 🤝 Contributing
 
-* Pull requests, feature ideas, and bug reports are welcome!
-* Please keep modules explicit and code style clean.
-* Run `cargo fmt` before submitting PRs.
+Contributions are welcome! Please fork this repo and create a pull request.
+If you'd like to discuss features, open an issue or email me.
 
 ---
 
 ## 📜 License
 
-MIT. See [LICENSE](LICENSE).
-
----
-
-## 📣 Author
-
-**Xzdes**
-With help, code review, and feedback from the Synapse community.
-
----
-
-> *Synapse is experimental and evolving quickly — join the journey and experiment with us!*
+MIT License — see [LICENSE](LICENSE).

@@ -25,21 +25,27 @@ pub enum SynType {
     Unit,
     /// Функция (арность и возвращаемый тип).
     Function {
+        /// Параметры функции.
         parameters: Vec<SynType>,
+        /// Тип возвращаемого значения.
         return_type: Box<SynType>,
     },
     /// Переменная типа (для полиморфизма).
     TypeVariable(String),
     /// Обобщённый тип (ForAll).
     ForAll {
+        /// Список параметров типа.
         type_params: Vec<String>,
+        /// Тело типа.
         body: Box<SynType>,
     },
     /// Record-тип (структура).
     Record(Vec<(String, SynType)>),
     /// Algebraic Data Type (ADT).
     ADT {
+        /// Имя ADT.
         name: String,
+        /// Варианты.
         variants: Vec<(String, Vec<SynType>)>,
     },
     /// Линейный тип.
@@ -52,14 +58,18 @@ pub enum SynType {
     Lifetime(String),
     /// Result<T, E>.
     Result {
+        /// Тип Ok.
         ok: Box<SynType>,
+        /// Тип Err.
         err: Box<SynType>,
     },
     /// ErrorUnion (T | E).
     ErrorUnion(Box<SynType>, Box<SynType>),
     /// Trait.
     Trait {
+        /// Имя трейта.
         name: String,
+        /// Методы трейта.
         methods: Vec<TraitMethodDecl>,
     },
     /// Foreign type (FFI).
@@ -80,20 +90,21 @@ pub struct TraitMethodDecl {
 pub enum SynTypeError {
     /// Несоответствие типов.
     #[error("Type mismatch: expected {expected:?}, found {found:?}")]
-    Mismatch { expected: SynType, found: SynType },
-
+    Mismatch {
+        /// Ожидаемый тип.
+        expected: SynType,
+        /// Найденный тип.
+        found: SynType,
+    },
     /// Неизвестная переменная типа.
     #[error("Unknown type variable: {0}")]
     UnknownTypeVariable(String),
-
     /// Ошибка ограничения (constraint).
     #[error("Constraint error: {0}")]
     Constraint(String),
-
     /// Ошибка borrow-типа.
     #[error("Borrow error: {0}")]
     Borrow(String),
-
     /// Общая ошибка.
     #[error("General type error: {0}")]
     General(String),
