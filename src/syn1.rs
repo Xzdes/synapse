@@ -1,77 +1,277 @@
-// src/syn1.rs
-
-//! Загрузка ASG-графа Synapse из бинарного файла в формате SYN1.
-//! Формат очень простой: [кол-во узлов][узлы][кол-во ребер][ребра]
-//! Каждый узел: [id][code][json value][json ty]
-//! Каждый ребро: [from][to][code]
+//! Модуль `syn1`
+//!
+//! Загрузка бинарного формата SYN1 (ASG):
+//! - Little Endian, VarInt
+//! - Поддержка всех узлов/рёбер, включая payload
+//!
+//! Ошибки обрабатываются через SynapseError::Serialization.
 
 use std::fs::File;
-use std::io::{self, Read, BufReader};
-use crate::asg::{Node, Edge, ASG};
-use crate::types::SynType;
+use std::io::Read;
+use byteorder::ReadBytesExt;
 
-/// Читает VarInt с файла (для совместимости с компактным форматом).
-fn read_varint<R: Read>(reader: &mut R) -> io::Result<u64> {
+use crate::asg::{ASG, Edge, Node, NodeID};
+use crate::nodecodes::{EdgeType, NodeType};
+use crate::{SynapseError, SynapseResult};
+
+/// Загрузка ASG из бинарного файла формата SYN1.
+pub fn load_syn1(path: &str) -> SynapseResult<ASG> {
+    let mut file = File::open(path)
+        .map_err(|e| SynapseError::Serialization(format!("Failed to open file: {}", e)))?;
+
+    // Проверяем заголовок
+    let mut header = [0u8; 4];
+    file.read_exact(&mut header)
+        .map_err(|e| SynapseError::Serialization(format!("Failed to read header: {}", e)))?;
+    if &header != b"SYN1" {
+        return Err(SynapseError::Serialization("Invalid SYN1 header".into()));
+    }
+
+    // Читаем версию (u8)
+    let _version = file
+        .read_u8()
+        .map_err(|e| SynapseError::Serialization(format!("Failed to read version: {}", e)))?;
+
+    // Читаем количество узлов (VarInt)
+    let node_count = read_varint(&mut file)?;
+
+    let mut nodes = Vec::new();
+    for _ in 0..node_count {
+        let node_type_code = read_varint(&mut file)?;
+        let node_type = NodeType::try_from(node_type_code as u32)
+            .map_err(|_| SynapseError::Serialization(format!("Unknown NodeType: {}", node_type_code)))?;
+
+        let node_id = read_varint(&mut file)? as NodeID;
+
+        let payload_length = read_varint(&mut file)? as usize;
+        let mut payload = None;
+        if payload_length > 0 {
+            let mut buf = vec![0u8; payload_length];
+            file.read_exact(&mut buf)
+                .map_err(|e| SynapseError::Serialization(format!("Failed to read node payload: {}", e)))?;
+            payload = Some(buf);
+        }
+
+        let edge_count = read_varint(&mut file)? as usize;
+        let mut edges = Vec::new();
+        for _ in 0..edge_count {
+            let edge_type_code = read_varint(&mut file)?;
+            let edge_type = EdgeType::try_from(edge_type_code as u32)
+                .map_err(|_| SynapseError::Serialization(format!("Unknown EdgeType: {}", edge_type_code)))?;
+
+            let target_node_id = read_varint(&mut file)? as NodeID;
+
+            let edge_payload_length = read_varint(&mut file)? as usize;
+            let mut edge_payload = None;
+            if edge_payload_length > 0 {
+                let mut buf = vec![0u8; edge_payload_length];
+                file.read_exact(&mut buf)
+                    .map_err(|e| SynapseError::Serialization(format!("Failed to read edge payload: {}", e)))?;
+                edge_payload = Some(buf);
+            }
+
+            edges.push(Edge::new(edge_type, target_node_id, edge_payload));
+        }
+
+        let mut node = Node::new(node_id, node_type, payload);
+        node.edges = edges;
+        nodes.push(node);
+    }
+
+    Ok(ASG { nodes })
+}
+
+/// Чтение VarInt из потока.
+fn read_varint<R: Read>(reader: &mut R) -> SynapseResult<u64> {
     let mut result = 0u64;
     let mut shift = 0u8;
+
     loop {
-        let mut buf = [0u8; 1];
-        reader.read_exact(&mut buf)?;
-        let byte = buf[0];
+        let byte = reader
+            .read_u8()
+            .map_err(|e| SynapseError::Serialization(format!("Failed to read varint: {}", e)))?;
+
         result |= ((byte & 0x7F) as u64) << shift;
         if byte & 0x80 == 0 {
             break;
         }
         shift += 7;
+        if shift >= 64 {
+            return Err(SynapseError::Serialization("VarInt too long".into()));
+        }
     }
+
     Ok(result)
 }
 
-/// Читает JSON-значение (value или ty) из файла как строку, потом парсит.
-fn read_json_value<R: Read>(reader: &mut R) -> io::Result<Option<serde_json::Value>> {
-    let len = read_varint(reader)? as usize;
-    if len == 0 {
-        return Ok(None);
+/// Преобразование числового кода в NodeType.
+impl TryFrom<u32> for NodeType {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        use NodeType::*;
+        let node_types = [
+            LiteralInt,
+            LiteralFloat,
+            LiteralBool,
+            LiteralString,
+            LiteralUnit,
+            BinaryOperation,
+            UnaryOperation,
+            Conditional,
+            RecordFieldAccess,
+            Dereference,
+            VariableDefinition,
+            VariableReference,
+            Lambda,
+            Application,
+            TypeInt,
+            TypeFloat,
+            TypeBool,
+            TypeString,
+            TypeUnit,
+            TypeFunction,
+            TypeVariable,
+            ForAll,
+            TypeRecord,
+            FieldDefinition,
+            TypeADT,
+            ADTVariant,
+            TypeLinear,
+            TypeSharedRef,
+            TypeMutableRef,
+            TypeLifetime,
+            TypeResult,
+            TypeErrorUnion,
+            TypeTrait,
+            TraitMethodDecl,
+            ForeignTypeDecl,
+            EffectIO,
+            EffectConsole,
+            EffectFSRead,
+            EffectFSWrite,
+            EffectNetwork,
+            EffectState,
+            EffectRandom,
+            EffectExcep,
+            EffectNonTerm,
+            EffectPure,
+            DataRecordInit,
+            DataADTInit,
+            DataOk,
+            DataErr,
+            PerformEffect,
+            MatchResult,
+            MatchADT,
+            MacroDefinition,
+            MacroInvocation,
+            ModuleRoot,
+            ImportDeclaration,
+            ExportDeclaration,
+            ImportAlias,
+            ForeignFunctionDecl,
+            ForeignBlock,
+            Proof,
+            Specification,
+            Assume,
+            Assert,
+            TestCase,
+            TestSuite,
+            Assertion,
+            PropertyDefinition,
+            InputGenerator,
+            MatchCase,
+            ImplMethodDef,
+            TraitImpl,
+            Concurrency,
+        ];
+
+        node_types
+            .get(value as usize)
+            .cloned()
+            .ok_or(())
     }
-    let mut buf = vec![0u8; len];
-    reader.read_exact(&mut buf)?;
-    let s = String::from_utf8(buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-    let val = serde_json::from_str(&s).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-    Ok(Some(val))
 }
 
-/// Читает граф из бинарного файла SYN1.
-pub fn load_syn1<P: AsRef<std::path::Path>>(path: P) -> io::Result<ASG> {
-    let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
+/// Преобразование числового кода в EdgeType.
+impl TryFrom<u32> for EdgeType {
+    type Error = ();
 
-    // 1. Узлы
-    let node_count = read_varint(&mut reader)? as usize;
-    let mut nodes = Vec::with_capacity(node_count);
-    for _ in 0..node_count {
-        let id = read_varint(&mut reader)?;
-        let code = read_varint(&mut reader)? as u16;
-        let value = read_json_value(&mut reader)?;
-        // Для типа: сериализуем SynType как json-строку (или None)
-        let ty_val = read_json_value(&mut reader)?;
-        let ty = if let Some(t) = ty_val {
-            Some(serde_json::from_value::<SynType>(t)
-                .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?)
-        } else {
-            None
-        };
-        nodes.push(Node { id, code, value, ty });
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        use EdgeType::*;
+        let edge_types = [
+            DataInput,
+            ControlFlowNext,
+            Condition,
+            ThenBranch,
+            ElseBranch,
+            ScopeLink,
+            LambdaParameter,
+            LambdaBody,
+            DefinitionLink,
+            BindsVariable,
+            ApplicationFunction,
+            ApplicationArgument,
+            TypeAnnotation,
+            FunctionParamType,
+            FunctionReturnType,
+            TypeVarBinding,
+            TypeBody,
+            Constraint,
+            LinearInnerType,
+            RefInnerType,
+            RefLifetime,
+            LifetimeBound,
+            ResultOkType,
+            ResultErrType,
+            RecordField,
+            FieldName,
+            FieldType,
+            FieldValue,
+            FieldTarget,
+            HasVariant,
+            VariantName,
+            VariantParam,
+            VariantArgValue,
+            VariantTarget,
+            ProducesEffect,
+            MatchInput,
+            MatchOkBranch,
+            MatchErrBranch,
+            MatchBranch,
+            MatchesVariant,
+            CaseBody,
+            ImportsFromModule,
+            ImportsSymbol,
+            ImportsAll,
+            ExportsSymbol,
+            ModuleContains,
+            HasFFISignature,
+            UsesABI,
+            LinksToLibrary,
+            ProvesSpec,
+            SpecifiesCode,
+            ProofStepDependsOn,
+            ReliesOnAssumption,
+            TestsFunction,
+            ProvidesInput,
+            MakesAssertion,
+            ChecksProperty,
+            InputForProperty,
+            MacroBody,
+            MacroInputAST,
+            InvokesMacro,
+            HasMethod,
+            ImplementsTrait,
+            ForType,
+            ProvidesImpl,
+            ImplementsMethod,
+            RootExpression,
+        ];
+
+        edge_types
+            .get(value as usize)
+            .cloned()
+            .ok_or(())
     }
-
-    // 2. Ребра
-    let edge_count = read_varint(&mut reader)? as usize;
-    let mut edges = Vec::with_capacity(edge_count);
-    for _ in 0..edge_count {
-        let from = read_varint(&mut reader)?;
-        let to = read_varint(&mut reader)?;
-        let code = read_varint(&mut reader)? as u16;
-        edges.push(Edge { from, to, code });
-    }
-
-    Ok(ASG { nodes, edges })
 }
