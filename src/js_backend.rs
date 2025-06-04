@@ -1,30 +1,23 @@
 //! Модуль `js_backend`
 //!
-//! Заглушка для JavaScript бэкенда компилятора Synapse.
-//! В будущем здесь будет генерация JS-кода из ASG для использования в браузере и Node.js.
+//! Заглушка для компиляции ASG в JavaScript.
 //!
-//! Планируется поддержка:
-//! - Генерация кода на JavaScript.
-//! - Поддержка ES6+ модулей.
-//! - Интеграция с внешними API.
+//! TODO:
+//! - Реальная генерация JS-кода.
+//! - Поддержка функций, модулей, классов.
 
 use crate::asg::ASG;
-use crate::{SynapseError, SynapseResult};
 
-/// JavaScript Backend для Synapse (заглушка).
+/// Скомпилировать ASG в JavaScript.
+///
+/// На данный момент реализовано как заглушка — возвращает простую строку с JS-кодом.
 pub struct JsBackend;
 
 impl JsBackend {
-    /// Сгенерировать JavaScript-код из ASG.
-    pub fn generate_js(asg: &ASG) -> SynapseResult<String> {
-        // Заглушка: возвращаем фиктивный JS-код.
-        println!("JS Backend: generating JS code for ASG with {} nodes.", asg.nodes.len());
-        Ok("// JavaScript code (stub)\nconsole.log('Hello from Synapse!');".to_string())
-    }
-
-    /// Оптимизация JavaScript-кода (заглушка).
-    pub fn optimize_js(js_code: &str) -> SynapseResult<String> {
-        println!("JS Backend: applying optimizations...");
-        Ok(js_code.to_string())
+    /// Компиляция ASG в JavaScript (заглушка).
+    pub fn generate_js(asg: &ASG) -> crate::SynapseResult<String> {
+        println!("JsBackend: generating JavaScript code for ASG with {} nodes.", asg.nodes.len());
+        // TODO: Реализовать полноценную генерацию JS-кода.
+        Ok("console.log('Hello from Synapse JS backend!');".to_string())
     }
 }

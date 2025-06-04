@@ -1,45 +1,19 @@
 //! Модуль `concurrency_async`
 //!
-//! Расширение поддержки многопоточности и асинхронного программирования в Synapse.
+//! Заглушка для асинхронной многопоточности в Synapse.
 //!
-//! Использует `tokio` или `async-std` для поддержки async/await и каналов связи.
-//!
-//! Планируется поддержка:
-//! - Асинхронное исполнение.
-//! - Каналы связи между потоками.
-//! - Планировщик задач.
+//! TODO:
+//! - Полноценная поддержка async/await.
+//! - Каналы связи.
+//! - Поддержка эффектов.
 
-use crate::{SynapseError, SynapseResult};
+use crate::SynapseResult;
 
-/// Асинхронный исполнение задачи (заглушка).
+/// Запустить асинхронный поток.
 ///
-/// В будущем можно будет передавать ASG и выполнять его в фоновом режиме.
-pub async fn run_async_task(name: &str) -> SynapseResult<()> {
-    println!("Async Task: {} started.", name);
-    // TODO: Реализовать исполнение ASG или эффекта асинхронно
+/// На данный момент реализовано как заглушка.
+pub async fn spawn_thread_async(message: &str) -> SynapseResult<()> {
+    println!("Async Thread: {}", message);
+    // TODO: Реализовать реальное создание асинхронного потока.
     Ok(())
-}
-
-/// Асинхронный канал связи (заглушка).
-///
-/// В будущем можно использовать tokio::mpsc или async_std::channel.
-pub struct AsyncChannel;
-
-impl AsyncChannel {
-    /// Создать новый асинхронный канал.
-    pub fn new() -> Self {
-        AsyncChannel
-    }
-
-    /// Отправить сообщение (заглушка).
-    pub async fn send(&self, message: &str) -> SynapseResult<()> {
-        println!("AsyncChannel: sending message '{}'", message);
-        Ok(())
-    }
-
-    /// Получить сообщение (заглушка).
-    pub async fn receive(&self) -> SynapseResult<String> {
-        println!("AsyncChannel: receiving message...");
-        Ok("message".to_string())
-    }
 }

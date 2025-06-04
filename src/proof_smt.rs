@@ -1,31 +1,29 @@
 //! Модуль `proof_smt`
 //!
-//! Заглушка для интеграции Synapse с внешними SMT-решателями (например, Z3).
+//! Интеграция с внешним SMT-решателем (например, Z3) для проверки доказательств.
 //!
-//! Планируется поддержка:
-//! - Проверка доказательств (Proof).
-//! - Проверка утверждений (Assert).
-//! - Генерация спецификаций (Specification).
-//! - Использование SMT-решателей (через crate `z3`).
+//! TODO:
+//! - Реальная передача формул в Z3 (или другой SMT).
+//! - Интерфейс для проверки свойств программ Synapse.
+//! - Интеграция с Proof DSL.
 
-use crate::asg::ASG;
-use crate::{SynapseError, SynapseResult};
+use crate::SynapseResult;
 
-/// SMT Backend для проверки доказательств (заглушка).
-pub struct SmtBackend;
-
-impl SmtBackend {
-    /// Проверить доказательства в ASG (заглушка).
-    pub fn verify_proofs(asg: &ASG) -> SynapseResult<()> {
-        println!("SMT Backend: verifying proofs for ASG with {} nodes.", asg.nodes.len());
-        // TODO: Подключить реальный SMT-решатель (например, Z3)
-        Ok(())
-    }
-
-    /// Проверить утверждения (Assert) в ASG (заглушка).
-    pub fn check_asserts(asg: &ASG) -> SynapseResult<()> {
-        println!("SMT Backend: checking asserts for ASG with {} nodes.", asg.nodes.len());
-        // TODO: Подключить реальный SMT-решатель (например, Z3)
-        Ok(())
-    }
+/// Проверить доказательство через SMT.
+///
+/// На данный момент реализовано как заглушка — всегда возвращает Ok(true).
+///
+/// # Аргументы
+/// - `formula`: строка с формулой для проверки.
+///
+/// # Пример
+/// ```
+/// use synapse::proof_smt;
+/// let result = proof_smt::solve_proof("x > 0").unwrap();
+/// assert_eq!(result, true);
+/// ```
+pub fn solve_proof(formula: &str) -> SynapseResult<bool> {
+    println!("ProofSMT: solving formula '{}'", formula);
+    // TODO: Реализовать связку с Z3 или другим SMT.
+    Ok(true)
 }
