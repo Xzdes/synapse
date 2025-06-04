@@ -1,105 +1,98 @@
 # Synapse
 
-**Synapse** is an experimental AI-focused programming language that uses an **Abstract Syntax Graph (ASG)** as its primary representation.  
-This repository contains the core library that defines the ASG, node/edge types, serialization (SYN1 format), interpreter, proof system, modules, FFI, effects, and more.
+**Synapse** is an AI-friendly programming language and toolkit based on an Abstract Syntax Graph (ASG).  
+It is designed for **maximum static analyzability**, **formal proofs**, and easy **AI integration**.
 
 ---
 
-## 🧩 What is Synapse?
+## ✅ What’s Done
 
-Synapse is a formal programming language designed with the following goals:
-- **Formal rigor and verifiability** — ensures AI-generated code is analyzable and verifiable.
-- **ASG as the canonical representation** — unlike traditional text-based languages, Synapse treats programs as graphs of nodes and edges.
-- **Static analyzability** — every node and edge is fully typed and documented.
-- **Cross-platform execution** — runs on Windows, Linux, macOS, Android, iOS, and WebAssembly (where possible).
+- **ASG Implementation**: Nodes, edges, and serialization/deserialization (SYN1 format).
+- **Interpreter**: Executes simple ASG-based programs.
+- **Basic Node Factories**: For creating literals, operations, and effects.
+- **Proof System (stub)**: Basic DSL for assertions and specifications.
+- **Modular System (stub)**: Import/export declarations and basic module structure.
+- **Compiler Backends (stubs)**:
+  - LLVM IR
+  - WebAssembly
+  - C
+  - JavaScript
+- **Benchmarks**:
+  - Serialization/Deserialization
+  - Interpreter execution
+- **Examples**:
+  - Fibonacci (basic arithmetic)
+  - HTTP Server (effect simulation)
+  - File Processing (effect simulation)
+- **Basic Logging**: `env_logger` integrated.
+- **CI Setup**: Ready for tests and benchmarks.
 
 ---
 
-## ✨ Features
+## 🚧 What’s Next
 
-✅ Abstract Syntax Graph (ASG)  
-✅ Binary serialization format (SYN1)  
-✅ Interpreter (runs ASG programs)  
-✅ Proof and specification support (assertions, assumes)  
-✅ Effects system (IO, File, Console, etc.)  
-✅ Macro system  
-✅ Multithreading support  
-✅ Modular architecture  
-✅ JSON import/export  
-✅ Unit tests included
+- **Type Checker**: Type inference and type validation.
+- **Proof System**:
+  - Connect to external SMT solvers (e.g., Z3).
+  - Define proof DSL.
+- **FFI System**:
+  - Automatic binding generation.
+  - Safe wrappers.
+- **Compiler Backends**:
+  - Implement real LLVM/WASM/C code generation.
+  - Optimize generated code.
+- **Async Concurrency**:
+  - Implement async/await, channels, etc.
+- **IDE Integration**:
+  - Graph visualizer (Graphviz).
+  - VSCode/IntelliJ plugin.
+- **Documentation**:
+  - More examples.
+  - Advanced tutorials.
+- **Testing**:
+  - Expand unit tests.
+  - Add property-based tests.
+- **Performance**:
+  - Optimize ASG processing and interpreter.
+  - Benchmark real-world programs.
 
 ---
 
-## 🛠️ How to build
+## 👶 Getting Started
 
-You'll need [Rust](https://www.rust-lang.org/) installed.
-
-```bash
-git clone https://github.com/yourusername/synapse.git
-cd synapse
-cargo build
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/yourusername/synapse.git
+   cd synapse
 ````
 
----
+2. **Build**:
 
-## 🚀 How to run
+   ```bash
+   cargo build
+   ```
+3. **Run Tests**:
 
-You can run tests with:
+   ```bash
+   cargo test
+   ```
+4. **Run Benchmarks**:
 
-```bash
-cargo test
-```
+   ```bash
+   cargo bench
+   ```
+5. **Try Examples**:
 
-If you want to explore how to use Synapse in your own Rust project, you can include it as a dependency in your `Cargo.toml`:
-
-```toml
-[dependencies]
-synapse = { path = "../synapse" }
-```
-
-Then you can use it like this:
-
-```rust
-use synapse::asg::ASG;
-use synapse::interpreter::InterpreterContext;
-use synapse::node_factories::literal_int;
-
-fn main() {
-    let mut asg = ASG::new();
-    let node = literal_int(1, 42);
-    asg.add_node(node);
-
-    let interpreter = InterpreterContext;
-    interpreter.execute(&asg).unwrap();
-}
-```
+   ```bash
+   cargo run --example fibonacci
+   ```
 
 ---
 
-## 📦 What's inside?
+## 🛠️ Contributing
 
-* `asg.rs` — defines ASG, nodes, and edges
-* `nodecodes.rs` — enums for NodeType and EdgeType
-* `syn1.rs` — loader for binary SYN1 format
-* `syn1_writer.rs` — writer for binary SYN1 format
-* `interpreter.rs` — ASG interpreter
-* `node_factories.rs` — helper functions for building nodes
-* `effects.rs` — effect system (IO, console, file, etc.)
-* `proof.rs` — proof and specification support
-* `ffi.rs` — foreign function interface
-* `macros.rs` — macro system
-* `concurrency.rs` — thread support
-* `testing.rs` — unit test integration
-* `compiler.rs` — frontend/backend architecture
-* `ai_api.rs` — AI interface (JSON serialization)
-* `types.rs` — Synapse type system
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please fork this repo and create a pull request.
-If you'd like to discuss features, open an issue or email me.
+Contributions welcome!
+Fork the repository, make your changes, and submit a pull request.
 
 ---
 

@@ -1,93 +1,85 @@
-//! # Synapse
+//! Crate root for Synapse.
 //!
-//! Основной модуль проекта Synapse. Подключает все остальные модули,
-//! предоставляя доступ ко всем ключевым структурам, типам и функциям.
-//!
-//! Этот проект реализует спецификацию Synapse 0.2, включая:
-//! - ASG (Abstract Syntax Graph) как основную модель программ
-//! - Полный набор NodeType и EdgeType
-//! - Расширенную систему типов
-//! - Эффекты, FFI, Proof, Macros
-//! - Интерпретатор и средства сериализации SYN1
-//! - Модули, тестирование, компилятор
-//! - Поддержку AI API
-//!
-//! Все публичные структуры сериализуемы через serde.
-//! Ошибки возвращаются через стандартный Result<T, E>.
+//! This library defines:
+//! - The ASG (Abstract Syntax Graph).
+//! - Node and edge types.
+//! - Serialization (SYN1 format).
+//! - Interpreter.
+//! - Proof system.
+//! - Modules and effects.
+//! - FFI.
+//! - Compiler backends (LLVM, Wasm, C, JS).
+//! - Type system and checker.
+//! - Async concurrency.
+//! - Graphviz exporter.
 
 #![warn(missing_docs)]
 
+pub mod ai_api;
 pub mod asg;
+pub mod compiler;
+pub mod concurrency;
+pub mod concurrency_async;
+pub mod effects;
+pub mod ffi;
+pub mod interpreter;
+pub mod macros;
+pub mod modules;
+pub mod node_factories;
 pub mod nodecodes;
-pub mod types;
+pub mod proof;
+pub mod proof_smt;
 pub mod syn1;
 pub mod syn1_writer;
-pub mod interpreter;
-pub mod node_factories;
-pub mod modules;
-pub mod effects;
-pub mod proof;
-pub mod ffi;
-pub mod macros;
-pub mod concurrency;
 pub mod testing;
-pub mod compiler;
-pub mod ai_api;
+pub mod types;
+
+// Backends
+pub mod llvm_backend;
+pub mod wasm_backend;
+pub mod c_backend;
+pub mod js_backend;
+
+// Tools
+pub mod tools;
+
+// Type Checker
+pub mod type_checker;
 
 use thiserror::Error;
 
-/// Тип ошибки верхнего уровня для всей библиотеки.
+/// Synapse error type.
 #[derive(Debug, Error)]
 pub enum SynapseError {
-    /// Ошибка сериализации/десериализации.
+    /// Serialization error.
     #[error("Serialization error: {0}")]
     Serialization(String),
-    /// Ошибка интерпретатора.
-    #[error("Interpreter error: {0}")]
-    Interpreter(String),
-    /// Ошибка типов.
+
+    /// Type error.
     #[error("Type error: {0}")]
     Type(String),
-    /// Ошибка модуля/импорта.
-    #[error("Module error: {0}")]
-    Module(String),
-    /// Ошибка эффектов.
-    #[error("Effect error: {0}")]
-    Effect(String),
-    /// Ошибка проверки (proof).
+
+    /// Proof error.
     #[error("Proof error: {0}")]
     Proof(String),
-    /// Ошибка FFI.
-    #[error("FFI error: {0}")]
-    Ffi(String),
-    /// Ошибка макросов.
-    #[error("Macro error: {0}")]
-    Macro(String),
-    /// Ошибка многопоточности.
+
+    /// Effect error.
+    #[error("Effect error: {0}")]
+    Effect(String),
+
+    /// Concurrency error.
     #[error("Concurrency error: {0}")]
     Concurrency(String),
-    /// Ошибка тестирования.
-    #[error("Testing error: {0}")]
-    Testing(String),
-    /// Ошибка компиляции.
-    #[error("Compiler error: {0}")]
-    Compiler(String),
-    /// Общая ошибка.
+
+    /// General error.
     #[error("General error: {0}")]
     General(String),
 }
 
-/// Результат Synapse.
-///
-/// Используется для возвращения ошибок и значений в формате Result<T, SynapseError>.
-///
-/// # Пример
-///
-/// ```
-/// use synapse::{SynapseResult, SynapseError};
-///
-/// fn my_function() -> SynapseResult<()> {
-///     Ok(())
-/// }
-/// ```
+/// Synapse result type.
 pub type SynapseResult<T> = Result<T, SynapseError>;
+
+/// Initialize the logger.
+pub fn init_logger() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}

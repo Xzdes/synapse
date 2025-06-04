@@ -1,39 +1,38 @@
 //! Модуль `ai_api`
 //!
-//! API для интеграции Synapse с AI-инструментами:
-//! - JSON-сериализация/десериализация
-//! - Аннотации ASG (заглушка для будущих метаданных)
-
-use serde::{Deserialize, Serialize};
-use serde_json;
+//! Интерфейс для взаимодействия с ИИ или внешними инструментами.
+//!
+//! Поддерживает:
+//! - Импорт/экспорт ASG в JSON.
+//! - Чтение/запись графа программ.
+//! - Интеграцию с AI-инструментами для анализа кода.
 
 use crate::asg::ASG;
 use crate::{SynapseError, SynapseResult};
+use serde_json;
 
-/// Сериализовать ASG в JSON.
-pub fn asg_to_json(asg: &ASG) -> SynapseResult<String> {
+/// Экспортировать ASG в JSON-строку.
+pub fn export_asg_to_json(asg: &ASG) -> SynapseResult<String> {
     serde_json::to_string_pretty(asg)
-        .map_err(|e| SynapseError::Serialization(format!("Failed to serialize ASG to JSON: {}", e)))
+        .map_err(|e| SynapseError::Serialization(format!("Failed to export ASG to JSON: {}", e)))
 }
 
-/// Десериализовать ASG из JSON.
-pub fn asg_from_json(json: &str) -> SynapseResult<ASG> {
-    serde_json::from_str(json)
-        .map_err(|e| SynapseError::Serialization(format!("Failed to deserialize ASG from JSON: {}", e)))
+/// Импортировать ASG из JSON-строки.
+pub fn import_asg_from_json(json_str: &str) -> SynapseResult<ASG> {
+    serde_json::from_str(json_str)
+        .map_err(|e| SynapseError::Serialization(format!("Failed to import ASG from JSON: {}", e)))
 }
 
-/// Заглушка для аннотаций (metadata).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AsgAnnotation {
-    /// Имя аннотации.
-    pub name: String,
-    /// Значение аннотации.
-    pub value: String,
+/// Сохранить ASG в файл JSON.
+pub fn save_asg_to_file(asg: &ASG, path: &str) -> SynapseResult<()> {
+    let json = export_asg_to_json(asg)?;
+    std::fs::write(path, json)
+        .map_err(|e| SynapseError::Serialization(format!("Failed to write ASG to file: {}", e)))
 }
 
-/// Добавить аннотацию к ASG.
-/// (На данном этапе — заглушка, без реальной интеграции.)
-pub fn add_annotation(_asg: &mut ASG, annotation: AsgAnnotation) {
-    println!("Adding annotation: {} = {}", annotation.name, annotation.value);
-    // В будущем: добавить поле аннотаций в ASG.
+/// Загрузить ASG из файла JSON.
+pub fn load_asg_from_file(path: &str) -> SynapseResult<ASG> {
+    let json = std::fs::read_to_string(path)
+        .map_err(|e| SynapseError::Serialization(format!("Failed to read ASG from file: {}", e)))?;
+    import_asg_from_json(&json)
 }

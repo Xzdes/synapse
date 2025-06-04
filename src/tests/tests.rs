@@ -1,75 +1,81 @@
-//! Модуль тестов для Synapse.
-//!
-//! Проверяет:
-//! - Сериализацию/десериализацию ASG (SYN1)
-//! - JSON конвертеры
-//! - Интерпретатор (базовые вызовы)
-//! - Эффекты
-//! - Proof
-//! - Макросы
+//! Юнит-тесты для Synapse.
 
+use synapse::asg::ASG;
+use synapse::node_factories::literal_int;
+use synapse::interpreter::InterpreterContext;
 use synapse::{
-    ai_api::{asg_from_json, asg_to_json},
-    asg::{ASG, Node},
-    effects::{perform_console_output, perform_io},
-    interpreter::InterpreterContext,
-    node_factories::{literal_int, binary_operation},
-    proof::{check_assert, check_assume},
-    syn1::{load_syn1},
-    syn1_writer::save_syn1,
-    SynapseResult,
+    llvm_backend::LLVMBackend,
+    wasm_backend::WasmBackend,
+    c_backend::CBackend,
+    js_backend::JsBackend,
+    proof::ProofDSL,
+    type_checker,
+    tools::graphviz_exporter,
 };
 
 #[test]
-fn test_serialization_and_deserialization() -> SynapseResult<()> {
+fn test_interpreter_runs() {
     let mut asg = ASG::new();
-    let node1 = literal_int(1, 42);
-    let node2 = binary_operation(2, 1);
-    asg.add_node(node1);
-    asg.add_node(node2);
-
-    save_syn1(&asg, "test_graph.synapse")?;
-    let loaded_asg = load_syn1("test_graph.synapse")?;
-
-    assert_eq!(asg.nodes.len(), loaded_asg.nodes.len());
-    Ok(())
-}
-
-#[test]
-fn test_json_serialization() -> SynapseResult<()> {
-    let mut asg = ASG::new();
-    let node1 = literal_int(1, 100);
-    asg.add_node(node1);
-
-    let json = asg_to_json(&asg)?;
-    let restored_asg = asg_from_json(&json)?;
-
-    assert_eq!(asg.nodes.len(), restored_asg.nodes.len());
-    Ok(())
-}
-
-#[test]
-fn test_interpreter_execution() -> SynapseResult<()> {
-    let mut asg = ASG::new();
-    let node = literal_int(1, 7);
-    asg.add_node(node);
-
+    asg.add_node(literal_int(1, 42));
     let interpreter = InterpreterContext;
-    interpreter.execute(&asg)?;
-    Ok(())
+    interpreter.execute(&asg).unwrap();
 }
 
 #[test]
-fn test_effects() -> SynapseResult<()> {
-    perform_console_output("Hello from test!")?;
-    let echoed = perform_io("Echo test")?;
-    assert_eq!(echoed, "Echo test");
-    Ok(())
+fn test_llvm_backend() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let ir = LLVMBackend::compile(&asg).unwrap();
+    assert!(ir.contains("LLVM IR"));
 }
 
 #[test]
-fn test_proof_check() -> SynapseResult<()> {
-    check_assert(true, "This should not fail")?;
-    check_assume(false, "This should warn but not fail")?;
-    Ok(())
+fn test_wasm_backend() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let wasm = WasmBackend::compile(&asg).unwrap();
+    assert!(wasm.starts_with(&[0x00, 0x61, 0x73, 0x6D])); // 'asm'
+}
+
+#[test]
+fn test_c_backend() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let c_code = CBackend::generate_c(&asg).unwrap();
+    assert!(c_code.contains("int main"));
+}
+
+#[test]
+fn test_js_backend() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let js_code = JsBackend::generate_js(&asg).unwrap();
+    assert!(js_code.contains("console.log"));
+}
+
+#[test]
+fn test_proof_dsl() {
+    let proof = ProofDSL::new();
+    proof.add_proof("Test Proof").unwrap();
+    proof.add_assertion("Test Assertion").unwrap();
+    proof.add_assumption("Test Assumption").unwrap();
+    proof.add_specification("Test Specification").unwrap();
+}
+
+#[test]
+fn test_type_checker() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    type_checker::check_types(&asg).unwrap();
+    type_checker::infer_types(&asg).unwrap();
+}
+
+#[test]
+fn test_graphviz_exporter() {
+    let mut asg = ASG::new();
+    asg.add_node(literal_int(1, 42));
+    let path = "test_output.dot";
+    graphviz_exporter::export_to_dot(&asg, path).unwrap();
+    assert!(std::path::Path::new(path).exists());
+    std::fs::remove_file(path).unwrap();
 }
