@@ -1,45 +1,49 @@
-//! Пример программы на Synapse для вычисления чисел Фибоначчи.
-//!
-//! Демонстрирует создание узлов и рёбер вручную и их исполнение через интерпретатор.
-
-use synapse::asg::{ASG, NodeID};
-use synapse::node_factories::{literal_int, binary_operation};
-use synapse::interpreter::InterpreterContext;
+// --- ИСПРАВЛЕНИЕ: Убираем неиспользуемый `NodeID` ---
+use synapse::asg::{ASG, Edge, Node};
+use synapse::nodecodes::{NodeType, EdgeType};
+use synapse::interpreter::{Interpreter, Value};
 
 fn main() {
+    println!("--- Synapse Example: Executing 5 + 8 ---");
+
     let mut asg = ASG::new();
 
-    // Пример простого вычисления: fib(5)
-    // Для упрощения создадим узлы для 5 и 8, а потом сложим их.
+    asg.add_node(Node {
+        id: 1,
+        node_type: NodeType::LiteralInt,
+        payload: Some(5i64.to_le_bytes().to_vec()),
+        edges: vec![],
+    });
 
-    let id1: NodeID = 1;
-    let id2: NodeID = 2;
-    let id3: NodeID = 3;
+    asg.add_node(Node {
+        id: 2,
+        node_type: NodeType::LiteralInt,
+        payload: Some(8i64.to_le_bytes().to_vec()),
+        edges: vec![],
+    });
 
-    let node1 = literal_int(id1, 5);
-    let node2 = literal_int(id2, 8);
-    // Здесь исправлено: передаём оператор как u8 (1 = '+')
-    let node3 = binary_operation(id3, 1);
+    asg.add_node(Node {
+        id: 3,
+        node_type: NodeType::BinaryOperation,
+        payload: None,
+        edges: vec![
+            Edge { edge_type: EdgeType::ApplicationArgument, target_node_id: 1, payload: None },
+            Edge { edge_type: EdgeType::ApplicationArgument, target_node_id: 2, payload: None },
+        ],
+    });
 
-    // Связываем аргументы с операцией
-    let mut node3 = node3;
-    node3.edges.push(synapse::asg::Edge::new(
-        synapse::nodecodes::EdgeType::ApplicationArgument,
-        id1,
-        None,
-    ));
-    node3.edges.push(synapse::asg::Edge::new(
-        synapse::nodecodes::EdgeType::ApplicationArgument,
-        id2,
-        None,
-    ));
+    let mut interpreter = Interpreter::new();
+    let result = interpreter.execute(&asg, 3);
 
-    // Добавляем узлы в ASG
-    asg.add_node(node1);
-    asg.add_node(node2);
-    asg.add_node(node3);
-
-    // Запускаем интерпретатор
-    let interpreter = InterpreterContext;
-    interpreter.execute(&asg).unwrap();
+    // --- ИСПРАВЛЕНИЕ: Упрощаем `match`, убирая недостижимую ветку ---
+    match result {
+        Ok(Value::Int(val)) => {
+            println!("\nExecution successful!");
+            println!("Result: {}", val);
+            assert_eq!(val, 13);
+        }
+        Err(e) => {
+            eprintln!("\nExecution failed: {}", e);
+        }
+    }
 }
